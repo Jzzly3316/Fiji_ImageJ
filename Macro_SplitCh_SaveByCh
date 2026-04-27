@@ -1,0 +1,35 @@
+// USE FORWARD SLASHES (/) AND END WITH A SLASH (/)
+inputDir = "/Users/juliazhou/Desktop/CAG/";
+outputDir = "/Users/juliazhou/Desktop/CAG ouput/";
+
+list = getFileList(inputDir);
+setBatchMode(true); // Processes in background for speed
+
+for (i = 0; i < list.length; i++) {
+    // Skip folders to avoid errors
+    if (File.isDirectory(inputDir + list[i])) continue;
+
+    // 1. Open with Bio-Formats as a Hyperstack
+    path = inputDir + list[i];
+    run("Bio-Formats Importer", "open=[" + path + "] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
+
+    baseName = File.nameWithoutExtension;
+
+    // 2. Split Channels
+    // This creates separate windows (e.g., C1-image.tif and C2-image.tif)
+    run("Split Channels");
+
+    // 3. Save each window as a separate TIFF file
+    // nImages counts the open windows created by the split
+    while (nImages > 0) {
+        selectImage(nImages); // Select the top-most window
+        windowTitle = getTitle();
+        
+        // Save as an individual TIFF file in the output folder
+        saveAs("Tiff", outputDir + baseName + "_" + windowTitle + ".tif");
+        close();
+    }
+}
+
+setBatchMode(false);
+print("Success! Processed all files. Check: " + outputDir);
