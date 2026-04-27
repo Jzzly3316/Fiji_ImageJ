@@ -26,7 +26,7 @@ for (i = 0; i < list.length; i++) {
         windowTitle = getTitle();
         
         // Save as an individual TIFF file in the output folder
-        saveAs("Tiff", outputDir + baseName + "_" + windowTitle + ".tif");
+        saveAs("Tiff", outputDir + "_" + windowTitle + ".tif");
         close();
     }
 }
