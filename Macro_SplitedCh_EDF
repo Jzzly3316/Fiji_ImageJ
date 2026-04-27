@@ -1,0 +1,50 @@
+inputDir = "/Users/juliazhou/Desktop/test2/";
+outputDir = "/Users/juliazhou/Desktop/test3/";
+
+list = getFileList(inputDir);
+setBatchMode(true); 
+
+for (i = 0; i < list.length; i++) {
+    if (File.isDirectory(inputDir + list[i])) continue;
+    if (startsWith(list[i], ".")) continue; 
+
+    path = inputDir + list[i];
+    run("Bio-Formats Importer", "open=[" + path + "] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
+    
+    baseName = File.nameWithoutExtension;
+    originalID = getImageID();
+
+    // --- DIMENSION FIX: Ensures Fiji sees 10+ SLICES ---
+    getDimensions(w, h, c, s, f);
+    totalPlanes = c * s * f;
+    
+    // If the plugin thinks there's only 1 slice, reassign all planes to 'slices'
+    if (s == 1 && totalPlanes > 1) {
+        run("Properties...", "channels=1 slices=" + totalPlanes + " frames=1");
+    }
+
+    // --- RUN EDF EASY MODE ---
+    // Note: Use quality='1' for High or '0' for Fast. '3' is not a valid parameter.
+    run("EDF Easy mode", "quality='4' topology='0' show-topology='off' show-view='off'");
+    
+    // Wait for the EDF "Output" window to appear
+    waitCount = 0;
+    while (isOpen("Output") == 0 && waitCount < 50) { 
+        wait(200); 
+        waitCount++;
+    }
+    
+    if (isOpen("Output")) {
+        selectWindow("Output");
+        saveAs("Tiff", outputDir + baseName + "_EDF.tif");
+        close(); 
+    }
+
+    // Cleanup
+    if (isOpen(originalID)) {
+        selectImage(originalID);
+        close();
+    }
+}
+setBatchMode(false);
+print("Done! Check " + outputDir);
